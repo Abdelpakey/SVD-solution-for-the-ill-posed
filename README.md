@@ -6,7 +6,7 @@ There are following solution to the problem:
 
 For ill conditioned case, you can compute the condition number of the matrix on cpu and if the condition number is very large, then you cannot do much. In this case, you can simply trivialize the solution.
 If the singular values are close to each other, you need to safe guard your back prop, that is, you need to write a new back ward pass. You can use the custom_svd function that replaces the torch's svd function.
-`
+
 
 def compute_grad_V(U, S, V, grad_V):
     N = S.shape[0]
@@ -43,28 +43,28 @@ def svd_grad_K(S):
     return K
 
 
-class CustomSVD(Function):
-    """
-    Costum SVD to deal with the situations when the
-    singular values are equal. In this case, if dealt
-    normally the gradient w.r.t to the input goes to inf.
-    To deal with this situation, we replace the entries of
-    a K matrix from eq: 13 in https://arxiv.org/pdf/1509.07838.pdf
-    to high value.
-    Note: only applicable for the tall and square matrix and doesn't
-    give correct gradients for fat matrix. Maybe transpose of the
-    original matrix is requires to deal with this situation. Left for
-    future work.
-    """
-    @staticmethod
-    def forward(ctx, input):
-        # Note: input is matrix of size m x n with m >= n.
-        # Note: if above assumption is voilated, the gradients
-        # will be wrong.
-        try:
-            U, S, V = torch.svd(input, some=True)
-        except:
-            import ipdb; ipdb.set_trace()
+    class CustomSVD(Function):
+        """
+        Costum SVD to deal with the situations when the
+        singular values are equal. In this case, if dealt
+        normally the gradient w.r.t to the input goes to inf.
+        To deal with this situation, we replace the entries of
+        a K matrix from eq: 13 in https://arxiv.org/pdf/1509.07838.pdf
+        to high value.
+        Note: only applicable for the tall and square matrix and doesn't
+        give correct gradients for fat matrix. Maybe transpose of the
+        original matrix is requires to deal with this situation. Left for
+        future work.
+        """
+        @staticmethod
+        def forward(ctx, input):
+            # Note: input is matrix of size m x n with m >= n.
+            # Note: if above assumption is voilated, the gradients
+            # will be wrong.
+            try:
+                U, S, V = torch.svd(input, some=True)
+            except:
+                import ipdb; ipdb.set_trace()
 
         ctx.save_for_backward(U, S, V)
         return U, S, V
