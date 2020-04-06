@@ -8,21 +8,21 @@ For ill conditioned case, you can compute the condition number of the matrix on 
 If the singular values are close to each other, you need to safe guard your back prop, that is, you need to write a new back ward pass. You can use the custom_svd function that replaces the torch's svd function.
 
 
-def compute_grad_V(U, S, V, grad_V):
-    N = S.shape[0]
-    K = svd_grad_K(S)
-    S = torch.eye(N).cuda(S.get_device()) * S.reshape((N, 1))
-    inner = K.T * (V.T @ grad_V)
-    inner = (inner + inner.T) / 2.0
-    return 2 * U @ S @ inner @ V.T
+    def compute_grad_V(U, S, V, grad_V):
+        N = S.shape[0]
+        K = svd_grad_K(S)
+        S = torch.eye(N).cuda(S.get_device()) * S.reshape((N, 1))
+        inner = K.T * (V.T @ grad_V)
+        inner = (inner + inner.T) / 2.0
+        return 2 * U @ S @ inner @ V.T
 
 
-def svd_grad_K(S):
-    N = S.shape[0]
-    s1 = S.view((1, N))
-    s2 = S.view((N, 1))
-    diff = s2 - s1
-    plus = s2 + s1
+    def svd_grad_K(S):
+        N = S.shape[0]
+        s1 = S.view((1, N))
+        s2 = S.view((N, 1))
+        diff = s2 - s1
+        plus = s2 + s1
 
     # TODO Look into it
     eps = torch.ones((N, N)) * 10**(-6)
